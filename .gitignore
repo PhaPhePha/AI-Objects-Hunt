@@ -58,3 +58,7 @@ app.*.map.json
 **/android/**/GeneratedPluginRegistrant.java
 **/android/key.properties
 *.jks
+
+
+.vscode/
+android/build/

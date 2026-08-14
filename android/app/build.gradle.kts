@@ -47,3 +47,12 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    implementation("org.tensorflow:tensorflow-lite:2.11.0") {
+        exclude(group = "org.tensorflow", module = "tensorflow-lite-api")
+    }
+    implementation("org.tensorflow:tensorflow-lite-gpu:2.11.0") {
+        exclude(group = "org.tensorflow", module = "tensorflow-lite-api")
+    }
+}
