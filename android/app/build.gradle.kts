@@ -33,7 +33,19 @@ android {
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
+
+            // Tắt R8 để không bị quét mất class TFLite
+            isMinifyEnabled = false
+            isShrinkResources = false
+
             signingConfig = signingConfigs.getByName("debug")
+
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
@@ -55,4 +67,5 @@ dependencies {
     implementation("org.tensorflow:tensorflow-lite-gpu:2.11.0") {
         exclude(group = "org.tensorflow", module = "tensorflow-lite-api")
     }
+    implementation("androidx.concurrent:concurrent-futures:1.2.0")
 }

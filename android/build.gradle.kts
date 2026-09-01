@@ -35,3 +35,18 @@ subprojects {
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
+
+subprojects {
+    val addDependencies = Action<Project> {
+        dependencies {
+            add("implementation", "androidx.concurrent:concurrent-futures:1.2.0")
+            add("implementation", "androidx.concurrent:concurrent-futures-ktx:1.2.0")
+        }
+    }
+
+    if (state.executed) {
+        addDependencies.execute(this)
+    } else {
+        afterEvaluate(addDependencies)
+    }
+}
