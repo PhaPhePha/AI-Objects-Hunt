@@ -57,7 +57,14 @@ class CaptureButton extends StatelessWidget {
 class RetakeAndSendRow extends StatelessWidget {
   final VoidCallback onRetake;
   final VoidCallback onSend;
-  const RetakeAndSendRow({super.key, required this.onRetake, required this.onSend});
+  final bool isEnglish;
+
+  const RetakeAndSendRow({
+    super.key,
+    required this.onRetake,
+    required this.onSend,
+    required this.isEnglish,
+  });
 
   Widget _actionButton({
     required IconData icon,
@@ -91,9 +98,9 @@ class RetakeAndSendRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _actionButton(icon: Icons.close, label: 'Chụp lại', onTap: onRetake),
+        _actionButton(icon: Icons.close, label: isEnglish ? 'Retake' : 'Chụp lại', onTap: onRetake),
         const SizedBox(width: 40),
-        _actionButton(icon: Icons.check, label: 'Gửi', onTap: onSend, filled: true),
+        _actionButton(icon: Icons.check, label: isEnglish ? 'Send' : 'Gửi', onTap: onSend, filled: true),
       ],
     );
   }

@@ -2,9 +2,9 @@
     <uses-permission android:name="android.permission.CAMERA" />
 
     <application
-        android:label="ai_objects_hunt"
+        android:label="AI Objects Hunt"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/app_icon">
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -1,24 +1,36 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:ai_objects_hunt/language_state.dart';
 
 class PhotoGalleryScreen extends StatefulWidget {
-  const PhotoGalleryScreen({super.key});
+  final bool isEnglish;
+  final VoidCallback onToggleLanguage;
 
-  @override
-  State<PhotoGalleryScreen> createState() => _PhotoGalleryScreenState();
-}
+  const PhotoGalleryScreen({
+    super.key,
+    required this.isEnglish,
+    required this.onToggleLanguage,
+  });
+  
+    @override
+    State<PhotoGalleryScreen> createState() => _PhotoGalleryScreenState();
+  }
 
 class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
-  List<File> _photos = [];
-  bool _isLoading = true;
+  final LanguageNotifier? languageNotifier = null; // Nhận từ HomeScreen
+    List<File> _photos = [];
+    bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _loadPhotos();
   }
+
+  void _toggleLanguage() {
+      languageNotifier?.toggle();
+    }
 
   Future<void> _loadPhotos() async {
     try {
@@ -54,21 +66,27 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
   Future<bool> _deletePhoto(File file) async {
     // Confirm deletion
     final shouldDelete = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Xoá ảnh'),
-        content: const Text('Bạn chắc chắn muốn xoá ảnh này?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Hủy'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Xoá'),
-          ),
-        ],
-      ),
+        context: context,
+        builder: (_) => AlertDialog(
+          title: widget.isEnglish
+              ? const Text('Delete Photo')
+              : const Text('Xoá ảnh'),
+          content: widget.isEnglish
+              ? const Text('Are you sure you want to delete this photo?')
+              : const Text('Bạn chắc chắn muốn xoá ảnh này?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: widget.isEnglish
+                  ? const Text('Cancel') : const Text('Hủy'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: widget.isEnglish
+                  ? const Text('Delete') : const Text('Xoá'),
+            ),
+          ],
+        ),
     );
 
     if (shouldDelete != true) return false;
@@ -82,7 +100,7 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
     } catch (e) {
       if (!mounted) return false;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Lỗi khi xoá ảnh: $e')));
+          .showSnackBar(SnackBar(content: Text(widget.isEnglish ? 'Error deleting photo: $e' : 'Lỗi khi xoá ảnh: $e')));
       return false;
     }
   }
@@ -106,20 +124,21 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         elevation: 0,
-        title: const Text(
-          'Ảnh đã lưu',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: widget.isEnglish
+              ? const Text('Captured Photos')
+              : const Text('Ảnh đã lưu'),
+          iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.white))
           : _photos.isEmpty
-          ? const Center(
-              child: Text(
-                'Chưa có ảnh nào :(',
-                style: TextStyle(color: Colors.white54, fontSize: 16),
-              ),
+          ? Center(
+                child: Text(
+                  widget.isEnglish
+                      ? 'No photos yet'
+                      : 'Chưa có ảnh nào :(',
+                  style: TextStyle(color: Colors.white54, fontSize: 16),
+                ),
             )
           : Column(
               children: [
@@ -129,16 +148,17 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        '${_photos.length} ảnh',
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
+                       Text(
+                          widget.isEnglish
+                              ? '${_photos.length} photos'
+                              : '${_photos.length} ảnh',
+                          style: const TextStyle(color: Colors.white70, fontSize: 14),
                         ),
-                      ),
                       IconButton(
                         icon: const Icon(Icons.refresh, color: Colors.white54),
                         onPressed: _loadPhotos,
+                        tooltip: widget.isEnglish
+                              ? 'Refresh' : 'Làm mới'
                       ),
                     ],
                   ),

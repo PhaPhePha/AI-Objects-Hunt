@@ -12,13 +12,22 @@ import 'package:ai_objects_hunt/models/detection.dart';
 
 class CameraScreen extends StatefulWidget {
   final List<CameraDescription> cameras;
-  const CameraScreen({super.key, required this.cameras});
+  final bool isEnglish;
+  final VoidCallback onToggleLanguage;
+
+  const CameraScreen({
+    super.key,
+    required this.cameras,
+    required this.isEnglish,
+    required this.onToggleLanguage,
+  });
 
   @override
   State<CameraScreen> createState() => _CameraScreenState();
 }
 
 class _CameraScreenState extends State<CameraScreen> {
+
   static const double _frameSize = 385;
   static const double _frameRadius = 48;
   static const double _confidenceThreshold = 0.48;
@@ -35,6 +44,7 @@ class _CameraScreenState extends State<CameraScreen> {
   List<Detection> _detections = [];
   bool _isModelLoading = true;
   String? _modelError;
+  
 
   @override
   void initState() {
@@ -83,11 +93,21 @@ class _CameraScreenState extends State<CameraScreen> {
       return;
     }
     if (_isModelLoading) {
-      _showMessage('Đang tải mô hình nhận diện, vui lòng đợi.');
+      _showMessage(
+        widget.isEnglish
+            ? 'Loading detection model, please wait.'
+            : 'Đang tải mô hình nhận diện, vui lòng đợi.',
+      );
       return;
     }
+
     if (!_detector.isReady) {
-      _showMessage(_modelError ?? 'Mô hình nhận diện chưa sẵn sàng.');
+      _showMessage(
+        _modelError ??
+            (widget.isEnglish
+                ? 'Detection model is not ready.'
+                : 'Mô hình nhận diện chưa sẵn sàng.'),
+      );
       return;
     }
 
@@ -107,8 +127,8 @@ class _CameraScreenState extends State<CameraScreen> {
     } on CameraException catch (e) {
       _showMessage(_cameraErrorMessage(e));
     } catch (e) {
-      debugPrint('Lỗi khi chụp ảnh: $e');
-      _showMessage('Không thể chụp ảnh. Vui lòng thử lại.');
+      debugPrint(widget.isEnglish ? 'Error capturing image: $e' : 'Lỗi khi chụp ảnh: $e');
+      _showMessage(widget.isEnglish ? 'Failed to capture image. Please try again.' : 'Không thể chụp ảnh. Vui lòng thử lại.');
     } finally {
       if (mounted) setState(() => _isCapturing = false);
     }
@@ -122,8 +142,14 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   void _openGallery() {
-    Navigator.of(context)
-        .push(MaterialPageRoute(builder: (_) => PhotoGalleryScreen()));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PhotoGalleryScreen(
+          isEnglish: widget.isEnglish,
+          onToggleLanguage: widget.onToggleLanguage,
+        ),
+      ),
+    );
   }
 
   Future<void> _toggleFlash() async {
@@ -141,9 +167,14 @@ class _CameraScreenState extends State<CameraScreen> {
 
   String _cameraErrorMessage(CameraException error) {
     if (error.code.startsWith('CameraAccess')) {
-      return 'Ứng dụng chưa được cấp quyền dùng camera. Hãy cấp quyền trong Cài đặt.';
+      return widget.isEnglish
+          ? 'Camera permission is not granted. Please allow camera access in Settings.'
+          : 'Ứng dụng chưa được cấp quyền dùng camera. Hãy cấp quyền trong Cài đặt.';
     }
-    return 'Camera gặp sự cố. Vui lòng thử lại.';
+
+    return widget.isEnglish
+        ? 'Camera error. Please try again.'
+        : 'Camera gặp sự cố. Vui lòng thử lại.';
   }
 
   void _showMessage(String message) {
@@ -166,15 +197,15 @@ class _CameraScreenState extends State<CameraScreen> {
       }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã lưu ảnh'),
+        SnackBar(
+          content: Text(widget.isEnglish ? 'Capture saved' : 'Đã lưu ảnh'),
           duration: Duration(seconds: 1),
         ),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Lỗi khi lưu ảnh: $e')));
+          .showSnackBar(SnackBar(content: Text(widget.isEnglish ? 'Error saving image: $e' : 'Lỗi khi lưu ảnh: $e')));
     } finally {
       if (mounted) {
         setState(() {
@@ -215,7 +246,10 @@ class _CameraScreenState extends State<CameraScreen> {
         future: _initializeControllerFuture,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return _CameraErrorView(onBack: () => Navigator.of(context).pop());
+            return _CameraErrorView(
+              isEnglish: widget.isEnglish,
+              onBack: () => Navigator.of(context).pop(),
+            );
           }
           if (snapshot.connectionState != ConnectionState.done) {
             return const Center(
@@ -313,6 +347,7 @@ class _CameraScreenState extends State<CameraScreen> {
                     isLoading: _isModelLoading,
                     error: _modelError,
                     onRetry: _initDetector,
+                    isEnglish: widget.isEnglish,
                   ),
                 ),
               Positioned(
@@ -328,6 +363,7 @@ class _CameraScreenState extends State<CameraScreen> {
                       : RetakeAndSendRow(
                           onRetake: _retakePhoto,
                           onSend: _saveImageLocally,
+                          isEnglish: widget.isEnglish,
                         ),
                 ),
               ),
@@ -340,9 +376,10 @@ class _CameraScreenState extends State<CameraScreen> {
 }
 
 class _CameraErrorView extends StatelessWidget {
+  final bool isEnglish;
   final VoidCallback onBack;
 
-  const _CameraErrorView({required this.onBack});
+  const _CameraErrorView({required this.isEnglish, required this.onBack});
 
   @override
   Widget build(BuildContext context) {
@@ -358,13 +395,18 @@ class _CameraErrorView extends StatelessWidget {
               size: 48,
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Không thể khởi tạo camera. Hãy kiểm tra quyền camera rồi thử mở lại ứng dụng.',
+            Text(
+              isEnglish
+              ? 'Failed to initialize camera. Please check camera permissions and try again.' 
+              : 'Không thể khởi tạo camera. Hãy kiểm tra quyền camera rồi thử mở lại ứng dụng.',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white, fontSize: 16),
             ),
             const SizedBox(height: 20),
-            OutlinedButton(onPressed: onBack, child: const Text('Quay lại')),
+            OutlinedButton(
+              onPressed: onBack,
+              child: Text(isEnglish ? 'Back' : 'Quay lại'),
+            ),
           ],
         ),
       ),
@@ -376,11 +418,13 @@ class _ModelStatusBanner extends StatelessWidget {
   final bool isLoading;
   final String? error;
   final VoidCallback onRetry;
+  final bool isEnglish;
 
   const _ModelStatusBanner({
     required this.isLoading,
     required this.error,
     required this.onRetry,
+    required this.isEnglish,
   });
 
   @override
@@ -392,7 +436,7 @@ class _ModelStatusBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: isLoading
-          ? const Row(
+          ? Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(
@@ -402,8 +446,12 @@ class _ModelStatusBanner extends StatelessWidget {
                 ),
                 SizedBox(width: 10),
                 Text(
-                  'Đang tải mô hình...',
-                  style: TextStyle(color: Colors.white),
+                  isEnglish
+                      ? 'Loading model...'
+                      : 'Đang tải mô hình...',
+                  style: const TextStyle(
+                    color: Colors.white,
+                  ),
                 ),
               ],
             )
@@ -417,7 +465,7 @@ class _ModelStatusBanner extends StatelessWidget {
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),
-                TextButton(onPressed: onRetry, child: const Text('Thử lại')),
+                TextButton(onPressed: onRetry, child: Text(isEnglish ? 'Retry' : 'Thử lại'),),
               ],
             ),
     );

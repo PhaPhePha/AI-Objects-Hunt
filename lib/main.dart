@@ -1,6 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-
+import 'package:flutter/cupertino.dart';
+import 'package:ai_objects_hunt/language_state.dart';
 import 'screens/home_screen.dart';
 
 Future<void> main() async {
@@ -38,38 +39,48 @@ String _cameraErrorMessage(CameraException error) {
   }
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   final List<CameraDescription> cameras;
   final String? cameraInitializationError;
 
   const MyApp({
     super.key,
-    this.cameras = const [],
+    required this.cameras,
     this.cameraInitializationError,
   });
 
   @override
-  Widget build(BuildContext context) {
-    if (cameras.isEmpty) {
-      return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'AI Objects Hunt',
-        theme: ThemeData(
-          brightness: Brightness.dark,
-          scaffoldBackgroundColor: Colors.black,
-        ),
-        home: Scaffold(
-          body: Center(
-            child: Text(
-              cameraInitializationError ?? 'Không có camera trên thiết bị này',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white, fontSize: 18),
-            ),
-          ),
-        ),
-      );
-    }
+  State<MyApp> createState() => _MyAppState();
+}
 
+class _MyAppState extends State<MyApp> {
+  late LanguageNotifier _lang;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _lang = LanguageNotifier();
+
+    // Khi ngôn ngữ thay đổi -> MyApp rebuild
+    _lang.addListener(_onLanguageChanged);
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  void dispose() {
+    _lang.removeListener(_onLanguageChanged);
+    _lang.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'AI Objects Hunt',
@@ -77,7 +88,11 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.dark,
         scaffoldBackgroundColor: Colors.black,
       ),
-      home: HomeScreen(cameras: cameras),
+      home: HomeScreen(
+        cameras: widget.cameras,
+        isEnglish: _lang.isEnglish,
+        onToggleLanguage: _lang.toggle,
+      ),
     );
   }
 }

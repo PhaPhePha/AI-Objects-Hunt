@@ -13,7 +13,7 @@ void main() {
   testWidgets('shows a helpful message when no camera is available', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(const MyApp(cameras: []));
 
     expect(find.text('Không có camera trên thiết bị này'), findsOneWidget);
   });
